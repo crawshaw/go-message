@@ -45,3 +45,30 @@ func encodingWriter(enc string, w io.Writer) io.WriteCloser {
 	}
 	return wc
 }
+
+// EncodedSize returns the transfer-encoded size of the contents of r.
+//
+// The exact transfer-encoding size is not fixed by any standard.
+// For example, the choice of column number to wrap lines in a
+// base64 encoded part can change the total number of bytes.
+//
+// This function measures by performing the encoding, which is not
+// particularly efficient but is efficient-enough and easy to verify.
+func EncodedSize(transferEncoding string, r io.Reader) (int64, error) {
+	lw := &lenWriter{}
+	w := encodingWriter(transferEncoding, lw)
+	if _, err := io.Copy(w, r); err != nil {
+		return lw.n, err
+	}
+	if err := w.Close(); err != nil {
+		return lw.n, err
+	}
+	return lw.n, nil
+}
+
+type lenWriter struct{ n int64 }
+
+func (w *lenWriter) Write(p []byte) (n int, err error) {
+	w.n += int64(len(p))
+	return len(p), nil
+}

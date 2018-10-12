@@ -71,3 +71,18 @@ func TestEncode(t *testing.T) {
 		}
 	}
 }
+
+func TestEncodedSize(t *testing.T) {
+	for _, test := range testEncodings {
+		test := test
+		t.Run(test.enc+"/"+test.decoded, func(t *testing.T) {
+			sz, err := EncodedSize(test.enc, strings.NewReader(test.decoded))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if sz != int64(len(test.encoded)) {
+				t.Errorf("EncodedSize=%d, want %d", sz, len(test.encoded))
+			}
+		})
+	}
+}
